@@ -135,7 +135,7 @@ public:
 
     // Statistics: (read-only member variable)
     //
-    uint64_t solves, starts, decisions, bridge_decisions, rnd_decisions, propagations, conflicts, backjumps;
+    uint64_t solves, starts, decisions, cmty_switches, rnd_decisions, propagations, conflicts, backjumps;
     uint64_t dec_vars, clauses_literals, learnts_literals, max_literals, tot_literals;
     uint64_t learnt_clause_vars, bridge_learnt_clause_vars;
 
@@ -211,7 +211,8 @@ protected:
     int64_t             propagation_budget; // -1 means no budget.
     bool                asynch_interrupt;
 
-    vec<bool> bridges;
+    int64_t             prev_cmty; // -1 init
+    vec<int>			cmtys;
 
     // Main internal methods:
     //

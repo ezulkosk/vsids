@@ -42,7 +42,7 @@ void printStats(Solver& solver)
     printf("conflicts             : %-12"PRIu64"   (%.0f /sec)\n", solver.conflicts   , solver.conflicts   /cpu_time);
     printf("backjumps             : %-12"PRIu64"\n", solver.backjumps);
     printf("decisions             : %-12"PRIu64"   (%4.2f %% random) (%.0f /sec)\n", solver.decisions, (float)solver.rnd_decisions*100 / (float)solver.decisions, solver.decisions   /cpu_time);
-    printf("bridge_decisions      : %-12"PRIu64"\n", solver.bridge_decisions);
+    printf("cmty_switches      : %-12"PRIu64"\n", solver.cmty_switches);
     printf("learnt_clause_vars    : %-12"PRIu64"\n", solver.learnt_clause_vars);
     printf("bridge_learnt_clause_vars : %-12"PRIu64"\n", solver.bridge_learnt_clause_vars);
     printf("propagations          : %-12"PRIu64"   (%.0f /sec)\n", solver.propagations, solver.propagations/cpu_time);

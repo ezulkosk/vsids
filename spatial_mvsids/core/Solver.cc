@@ -77,7 +77,11 @@ Solver::Solver() :
 
     // Statistics: (formerly in 'SolverStats')
     //
-  , solves(0), starts(0), decisions(0), bridge_decisions(0), rnd_decisions(0), propagations(0), conflicts(0), backjumps(0)
+  , solves(0), starts(0)
+
+  , decisions(0), cmty_switches(0), prev_cmty(-1)
+
+  , rnd_decisions(0), propagations(0), conflicts(0), backjumps(0)
   , dec_vars(0), clauses_literals(0), learnts_literals(0), max_literals(0), tot_literals(0)
 
   , learnt_clause_vars (0)
@@ -128,7 +132,6 @@ Var Solver::newVar(bool sign, bool dvar)
     decision .push();
     trail    .capacity(v+1);
     setDecisionVar(v, dvar);
-    bridges  .push(false);
     return v;
 }
 
@@ -358,9 +361,6 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
 
     for (int i = 0; i < out_learnt.size(); i++) {
         Var v = var(out_learnt[i]);
-        if (bridges[v]) {
-            bridge_learnt_clause_vars++;
-        }
         learnt_clause_vars++;
     }
 
@@ -709,7 +709,13 @@ lbool Solver::search(int nof_conflicts)
                     // Model found:
                     return l_True;
 
-                if (bridges[var(next)]) bridge_decisions++;
+
+                if (cmtys[var(next)] != prev_cmty){
+                	printf("Switch\n");
+                	prev_cmty = cmtys[var(next)];
+                	cmty_switches++;
+                }
+                printf("%d\n", cmtys[var(next)]);
             }
 
             // Increase decision level and enqueue 'next'
@@ -770,10 +776,11 @@ lbool Solver::solve_()
     FILE* cmty_file = fopen(opt_cmty_file, "r");
     if (cmty_file == NULL)
         fprintf(stderr, "could not open file %s\n", (const char*) opt_cmty_file), exit(1);
-    vec<int> cmtys (nVars());
 
     int v;
     int cmty;
+    cmtys.growTo(nVars());
+
     while (fscanf(cmty_file, "%d %d\n", &v, &cmty) == 2) {
         cmtys[v] = cmty;
     }
@@ -787,7 +794,6 @@ lbool Solver::solve_()
     printf("Variables : %d\n", nVars());
 
     fclose(cmty_file);
-    exit(1);
 
     model.clear();
     conflict.clear();
