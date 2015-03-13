@@ -711,7 +711,7 @@ lbool Solver::search(int nof_conflicts)
 
 
                 if (cmtys[var(next)] != prev_cmty){
-                	printf("Switch\n");
+                	//printf("Switch\n");
                 	prev_cmty = cmtys[var(next)];
                 	cmty_switches++;
                 }
