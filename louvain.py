@@ -13,7 +13,7 @@ def read_dimacs_format(lines):
         tokens = line.split()
         if not len(tokens) or tokens[0] == 'c':
             continue
-	elif tokens[0] == 'p' and tokens[1] == 'cnf':
+        elif tokens[0] == 'p' and tokens[1] == 'cnf':
             number_of_variables = int(tokens[2])
             number_of_clauses = int(tokens[3])
         elif tokens[-1] == '0':
@@ -38,6 +38,7 @@ def build_graph(G, sat_instance):
 
 if __name__ == '__main__':
     filename = sys.argv[1]
+    outfile = open(sys.argv[2], 'w')
     
     content = []
     with open(filename, "r") as f:
@@ -50,5 +51,7 @@ if __name__ == '__main__':
     partition = community.best_partition(G)
     
     for k in partition.keys():
-        print("{0} {1}".format(k - 1, partition[k]))
+        outfile.write("{0} {1}\n".format(k - 1, partition[k]))
+    
+    outfile.close()
     
