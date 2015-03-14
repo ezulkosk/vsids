@@ -79,7 +79,11 @@ Solver::Solver() :
     //
   , solves(0), starts(0)
 
-  , decisions(0), cmty_switches(0), prev_cmty(-1)
+	//EXPERIMENT
+	, cmty_switches(0), prev_cmty(-1), iters_in_cmty(0)
+
+
+	, decisions(0)
 
   , rnd_decisions(0), propagations(0), conflicts(0), backjumps(0)
   , dec_vars(0), clauses_literals(0), learnts_literals(0), max_literals(0), tot_literals(0)
@@ -97,6 +101,8 @@ Solver::Solver() :
   , order_heap         (VarOrderLt(activity))
   , progress_estimate  (0)
   , remove_satisfied   (true)
+
+
 
     // Resource constraints:
     //
@@ -710,12 +716,18 @@ lbool Solver::search(int nof_conflicts)
                     return l_True;
 
 
+                //XXX Experiment
+                iters_in_cmty++;
                 if (cmtys[var(next)] != prev_cmty){
-                	//printf("Switch\n");
+                	if(spatial_frequencies.size() <= iters_in_cmty){
+                		spatial_frequencies.growTo(iters_in_cmty+1, 0);
+                		max_iters_in_cmty = iters_in_cmty;
+                	}
+                	spatial_frequencies[iters_in_cmty] = spatial_frequencies[iters_in_cmty]+1;
                 	prev_cmty = cmtys[var(next)];
                 	cmty_switches++;
+                	iters_in_cmty=0;
                 }
-                printf("%d\n", cmtys[var(next)]);
             }
 
             // Increase decision level and enqueue 'next'
@@ -840,7 +852,7 @@ lbool Solver::solve_()
 //=================================================================================================
 // Writing CNF to DIMACS:
 // 
-// FIXME: this needs to be rewritten completely.
+
 
 static Var mapVar(Var x, vec<Var>& map, Var& max)
 {
