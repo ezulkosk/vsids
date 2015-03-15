@@ -51,9 +51,13 @@ void printStats(Solver& solver)
     printf("CPU time              : %g s\n", cpu_time);
 
     printf("EXPERIMENT\n");
+    printf("decisions             : %-12"PRIu64"   (%4.2f %% random) (%.0f /sec)\n", solver.decisions, (float)solver.rnd_decisions*100 / (float)solver.decisions, solver.decisions   /cpu_time);
     printf("cmty_switches      : %-12"PRIu64"\n", solver.cmty_switches);
+    printf("unique frequencies : %d\n", solver.frequencies_map.size());
+    int t;
     for(int i = 0; i <= solver.max_iters_in_cmty; i++)
-    	printf("%d %d\n", i, solver.spatial_frequencies[i]);
+    	if(solver.frequencies_map.has(i, t) != 0)
+    		printf("%d %d\n", i, t);
 
 }
 
@@ -68,10 +72,10 @@ static void SIGINT_interrupt(int signum) { solver->interrupt(); }
 // functions are guarded by locks for multithreaded use).
 static void SIGINT_exit(int signum) {
     printf("\n"); printf("*** INTERRUPTED ***\n");
-    if (solver->verbosity > 0){
-        printStats(*solver);
-        printf("\n"); printf("*** INTERRUPTED ***\n"); }
-    _exit(1); }
+	printStats(*solver);
+	printf("\n"); printf("*** INTERRUPTED ***\n");
+    _exit(1);
+    }
 
 
 //=================================================================================================
@@ -160,18 +164,17 @@ int main(int argc, char** argv)
        
         if (!S.simplify()){
             if (res != NULL) fprintf(res, "UNSAT\n"), fclose(res);
-            if (S.verbosity > 0){
-                printf("===============================================================================\n");
-                printf("Solved by unit propagation\n");
-                printStats(S);
-                printf("\n"); }
+			printf("===============================================================================\n");
+			printf("Solved by unit propagation\n");
+			printStats(S);
+			printf("\n");
             printf("UNSATISFIABLE\n");
             exit(20);
         }
         
         vec<Lit> dummy;
         lbool ret = S.solveLimited(dummy);
-        if (S.verbosity > 0){
+        if (S.verbosity > -1){
             printStats(S);
             printf("\n"); }
         printf(ret == l_True ? "SATISFIABLE\n" : ret == l_False ? "UNSATISFIABLE\n" : "INDETERMINATE\n");

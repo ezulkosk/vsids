@@ -116,7 +116,8 @@ public:
     //EXPERIMENT
 	int		            prev_cmty; // -1 init
 	vec<int>			cmtys;
-	vec<int>			spatial_frequencies;
+	FMap<int>			frequencies_map;
+	//vec<int>			spatial_frequencies;
 	int		 			cmty_switches;
 	int					iters_in_cmty;
 	int					max_iters_in_cmty;

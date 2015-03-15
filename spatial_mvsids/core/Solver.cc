@@ -80,7 +80,7 @@ Solver::Solver() :
   , solves(0), starts(0)
 
 	//EXPERIMENT
-	, cmty_switches(0), prev_cmty(-1), iters_in_cmty(0)
+	, cmty_switches(0), prev_cmty(-1), iters_in_cmty(0), max_iters_in_cmty(0)
 
 
 	, decisions(0)
@@ -717,7 +717,25 @@ lbool Solver::search(int nof_conflicts)
 
 
                 //XXX Experiment
+
+                //spatial locality - count + iters_in_cmty
                 iters_in_cmty++;
+                int temp;
+                //printf("%d\n", frequencies_map.size());
+                if (cmtys[var(next)] != prev_cmty){
+                	if(frequencies_map.has(iters_in_cmty, temp) == 0)
+                		frequencies_map.insert(iters_in_cmty,1);
+                	else
+                		frequencies_map[iters_in_cmty] = frequencies_map[iters_in_cmty]+1;
+                	//printf("%d\n", frequencies_map.has(iters_in_cmty, temp));
+                	if(iters_in_cmty > max_iters_in_cmty)
+                		max_iters_in_cmty = iters_in_cmty;
+
+					prev_cmty = cmtys[var(next)];
+					cmty_switches++;
+					iters_in_cmty=0;
+				}
+                /* vec
                 if (cmtys[var(next)] != prev_cmty){
                 	if(spatial_frequencies.size() <= iters_in_cmty){
                 		spatial_frequencies.growTo(iters_in_cmty+1, 0);
@@ -728,6 +746,16 @@ lbool Solver::search(int nof_conflicts)
                 	cmty_switches++;
                 	iters_in_cmty=0;
                 }
+                */
+
+                //TODO temporal locality
+
+                //TODO Exploit Backdoors - Count + Integral + Integral over time
+
+                //TODO Exploit Critical Variables - Count + Integral + Integral over time
+
+                //TODO outside SAT, Backdoors vs Critical Variables
+
             }
 
             // Increase decision level and enqueue 'next'
