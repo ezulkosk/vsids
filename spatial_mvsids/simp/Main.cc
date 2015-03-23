@@ -46,6 +46,15 @@ void printStats(Solver& solver)
     printf("conflict literals     : %-12"PRIu64"   (%4.2f %% deleted)\n", solver.tot_literals, (solver.max_literals - solver.tot_literals)*100 / (double)solver.max_literals);
     if (mem_used != 0) printf("Memory used           : %.2f MB\n", mem_used);
     printf("CPU time              : %g s\n", cpu_time);
+
+    printf("EXPERIMENT\n");
+	printf("decisions             : %-12"PRIu64"   (%4.2f %% random) (%.0f /sec)\n", solver.decisions, (float)solver.rnd_decisions*100 / (float)solver.decisions, solver.decisions   /cpu_time);
+	printf("cmty_switches      : %-12"PRIu64"\n", solver.cmty_switches);
+	printf("unique frequencies : %d\n", solver.frequencies_map.size());
+	int t;
+	for(int i = 0; i <= solver.max_iters_in_cmty; i++)
+		if(solver.frequencies_map.has(i, t) != 0)
+			printf("%d %d\n", i, t);
 }
 
 

@@ -1,6 +1,6 @@
 /*****************************************************************************************[Main.cc]
 Copyright (c) 2003-2006, Niklas Een, Niklas Sorensson
-Copyright (c) 2007-2010, Niklas Sorensson
+Copyright (c) 2007,      Niklas Sorensson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -22,12 +22,13 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 #include <signal.h>
 #include <zlib.h>
+#include <sys/resource.h>
 
 #include "utils/System.h"
 #include "utils/ParseUtils.h"
 #include "utils/Options.h"
 #include "core/Dimacs.h"
-#include "core/Solver.h"
+#include "simp/SimpSolver.h"
 
 using namespace Minisat;
 
@@ -40,25 +41,11 @@ void printStats(Solver& solver)
     double mem_used = memUsedPeak();
     printf("restarts              : %"PRIu64"\n", solver.starts);
     printf("conflicts             : %-12"PRIu64"   (%.0f /sec)\n", solver.conflicts   , solver.conflicts   /cpu_time);
-    printf("backjumps             : %-12"PRIu64"\n", solver.backjumps);
     printf("decisions             : %-12"PRIu64"   (%4.2f %% random) (%.0f /sec)\n", solver.decisions, (float)solver.rnd_decisions*100 / (float)solver.decisions, solver.decisions   /cpu_time);
-
-    printf("learnt_clause_vars    : %-12"PRIu64"\n", solver.learnt_clause_vars);
-    printf("bridge_learnt_clause_vars : %-12"PRIu64"\n", solver.bridge_learnt_clause_vars);
     printf("propagations          : %-12"PRIu64"   (%.0f /sec)\n", solver.propagations, solver.propagations/cpu_time);
     printf("conflict literals     : %-12"PRIu64"   (%4.2f %% deleted)\n", solver.tot_literals, (solver.max_literals - solver.tot_literals)*100 / (double)solver.max_literals);
     if (mem_used != 0) printf("Memory used           : %.2f MB\n", mem_used);
     printf("CPU time              : %g s\n", cpu_time);
-
-    printf("EXPERIMENT\n");
-    printf("decisions             : %-12"PRIu64"   (%4.2f %% random) (%.0f /sec)\n", solver.decisions, (float)solver.rnd_decisions*100 / (float)solver.decisions, solver.decisions   /cpu_time);
-    printf("cmty_switches      : %-12"PRIu64"\n", solver.cmty_switches);
-    printf("unique frequencies : %d\n", solver.frequencies_map.size());
-    int t;
-    for(int i = 0; i <= solver.max_iters_in_cmty; i++)
-    	if(solver.frequencies_map.has(i, t) != 0)
-    		printf("%d %d\n", i, t);
-
 }
 
 
@@ -72,15 +59,14 @@ static void SIGINT_interrupt(int signum) { solver->interrupt(); }
 // functions are guarded by locks for multithreaded use).
 static void SIGINT_exit(int signum) {
     printf("\n"); printf("*** INTERRUPTED ***\n");
-	printStats(*solver);
-	printf("\n"); printf("*** INTERRUPTED ***\n");
-    _exit(1);
-    }
+    if (solver->verbosity > 0){
+        printStats(*solver);
+        printf("\n"); printf("*** INTERRUPTED ***\n"); }
+    _exit(1); }
 
 
 //=================================================================================================
 // Main:
-
 
 int main(int argc, char** argv)
 {
@@ -91,30 +77,22 @@ int main(int argc, char** argv)
 #if defined(__linux__)
         fpu_control_t oldcw, newcw;
         _FPU_GETCW(oldcw); newcw = (oldcw & ~_FPU_EXTENDED) | _FPU_DOUBLE; _FPU_SETCW(newcw);
-        //Ed printf("WARNING: for repeatability, setting FPU to use double precision\n");
+        printf("WARNING: for repeatability, setting FPU to use double precision\n");
 #endif
         // Extra options:
         //
         IntOption    verb   ("MAIN", "verb",   "Verbosity level (0=silent, 1=some, 2=more).", 1, IntRange(0, 2));
+        BoolOption   pre    ("MAIN", "pre",    "Completely turn on/off any preprocessing.", true);
+        StringOption dimacs ("MAIN", "dimacs", "If given, stop after preprocessing and write the result to this file.");
         IntOption    cpu_lim("MAIN", "cpu-lim","Limit on CPU time allowed in seconds.\n", INT32_MAX, IntRange(0, INT32_MAX));
         IntOption    mem_lim("MAIN", "mem-lim","Limit on memory usage in megabytes.\n", INT32_MAX, IntRange(0, INT32_MAX));
-        StringOption decision_trail("MAIN", "decision-trail", "If given, save trail of decision variables from file.");
-        
+
         parseOptions(argc, argv, true);
+        
+        SimpSolver  S;
+        double      initial_time = cpuTime();
 
-        Solver S;
-        FILE * f = fopen((const char*)decision_trail, "wt");
-		if (f != NULL) {
-
-			S.decision_trail_file = f;
-			//fclose(f);
-		}
-		else {
-			printf("ERROR! Could not open file: %s\n", (const char*)decision_trail);
-			exit(1);
-		}
-        S.decision_trail_file = f;
-        double initial_time = cpuTime();
+        if (!pre) S.eliminate(true);
 
         S.verbosity = verb;
         
@@ -147,7 +125,7 @@ int main(int argc, char** argv)
         
         if (argc == 1)
             printf("Reading from standard input... Use '--help' for help.\n");
-        
+
         gzFile in = (argc == 1) ? gzdopen(0, "rb") : gzopen(argv[1], "rb");
         if (in == NULL)
             printf("ERROR! Could not open file: %s\n", argc == 1 ? "<stdin>" : argv[1]), exit(1);
@@ -159,34 +137,50 @@ int main(int argc, char** argv)
         parse_DIMACS(in, S);
         gzclose(in);
         FILE* res = (argc >= 3) ? fopen(argv[2], "wb") : NULL;
-        
+
         if (S.verbosity > 0){
             printf("|  Number of variables:  %12d                                         |\n", S.nVars());
             printf("|  Number of clauses:    %12d                                         |\n", S.nClauses()); }
         
         double parsed_time = cpuTime();
-        if (S.verbosity > 0){
+        if (S.verbosity > 0)
             printf("|  Parse time:           %12.2f s                                       |\n", parsed_time - initial_time);
-            printf("|                                                                             |\n"); }
- 
+
         // Change to signal-handlers that will only notify the solver and allow it to terminate
         // voluntarily:
         signal(SIGINT, SIGINT_interrupt);
         signal(SIGXCPU,SIGINT_interrupt);
-       
-        if (!S.simplify()){
+
+        S.eliminate(true);
+        double simplified_time = cpuTime();
+        if (S.verbosity > 0){
+            printf("|  Simplification time:  %12.2f s                                       |\n", simplified_time - parsed_time);
+            printf("|                                                                             |\n"); }
+
+        if (!S.okay()){
             if (res != NULL) fprintf(res, "UNSAT\n"), fclose(res);
-			printf("===============================================================================\n");
-			printf("Solved by unit propagation\n");
-			printStats(S);
-			printf("\n");
+            if (S.verbosity > 0){
+                printf("===============================================================================\n");
+                printf("Solved by simplification\n");
+                printStats(S);
+                printf("\n"); }
             printf("UNSATISFIABLE\n");
             exit(20);
         }
-        
+
+        if (dimacs){
+            if (S.verbosity > 0)
+                printf("==============================[ Writing DIMACS ]===============================\n");
+            S.toDimacs((const char*)dimacs);
+            if (S.verbosity > 0)
+                printStats(S);
+            exit(0);
+        }
+
         vec<Lit> dummy;
         lbool ret = S.solveLimited(dummy);
-        if (S.verbosity > -1){
+        
+        if (S.verbosity > 0){
             printStats(S);
             printf("\n"); }
         printf(ret == l_True ? "SATISFIABLE\n" : ret == l_False ? "UNSATISFIABLE\n" : "INDETERMINATE\n");
@@ -203,7 +197,7 @@ int main(int argc, char** argv)
                 fprintf(res, "INDET\n");
             fclose(res);
         }
-        
+
 #ifdef NDEBUG
         exit(ret == l_True ? 10 : ret == l_False ? 20 : 0);     // (faster than "return", which will invoke the destructor for 'Solver')
 #else

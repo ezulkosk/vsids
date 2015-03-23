@@ -40,25 +40,11 @@ void printStats(Solver& solver)
     double mem_used = memUsedPeak();
     printf("restarts              : %"PRIu64"\n", solver.starts);
     printf("conflicts             : %-12"PRIu64"   (%.0f /sec)\n", solver.conflicts   , solver.conflicts   /cpu_time);
-    printf("backjumps             : %-12"PRIu64"\n", solver.backjumps);
     printf("decisions             : %-12"PRIu64"   (%4.2f %% random) (%.0f /sec)\n", solver.decisions, (float)solver.rnd_decisions*100 / (float)solver.decisions, solver.decisions   /cpu_time);
-
-    printf("learnt_clause_vars    : %-12"PRIu64"\n", solver.learnt_clause_vars);
-    printf("bridge_learnt_clause_vars : %-12"PRIu64"\n", solver.bridge_learnt_clause_vars);
     printf("propagations          : %-12"PRIu64"   (%.0f /sec)\n", solver.propagations, solver.propagations/cpu_time);
     printf("conflict literals     : %-12"PRIu64"   (%4.2f %% deleted)\n", solver.tot_literals, (solver.max_literals - solver.tot_literals)*100 / (double)solver.max_literals);
     if (mem_used != 0) printf("Memory used           : %.2f MB\n", mem_used);
     printf("CPU time              : %g s\n", cpu_time);
-
-    printf("EXPERIMENT\n");
-    printf("decisions             : %-12"PRIu64"   (%4.2f %% random) (%.0f /sec)\n", solver.decisions, (float)solver.rnd_decisions*100 / (float)solver.decisions, solver.decisions   /cpu_time);
-    printf("cmty_switches      : %-12"PRIu64"\n", solver.cmty_switches);
-    printf("unique frequencies : %d\n", solver.frequencies_map.size());
-    int t;
-    for(int i = 0; i <= solver.max_iters_in_cmty; i++)
-    	if(solver.frequencies_map.has(i, t) != 0)
-    		printf("%d %d\n", i, t);
-
 }
 
 
@@ -72,10 +58,10 @@ static void SIGINT_interrupt(int signum) { solver->interrupt(); }
 // functions are guarded by locks for multithreaded use).
 static void SIGINT_exit(int signum) {
     printf("\n"); printf("*** INTERRUPTED ***\n");
-	printStats(*solver);
-	printf("\n"); printf("*** INTERRUPTED ***\n");
-    _exit(1);
-    }
+    if (solver->verbosity > 0){
+        printStats(*solver);
+        printf("\n"); printf("*** INTERRUPTED ***\n"); }
+    _exit(1); }
 
 
 //=================================================================================================
@@ -91,29 +77,18 @@ int main(int argc, char** argv)
 #if defined(__linux__)
         fpu_control_t oldcw, newcw;
         _FPU_GETCW(oldcw); newcw = (oldcw & ~_FPU_EXTENDED) | _FPU_DOUBLE; _FPU_SETCW(newcw);
-        //Ed printf("WARNING: for repeatability, setting FPU to use double precision\n");
+        printf("WARNING: for repeatability, setting FPU to use double precision\n");
 #endif
         // Extra options:
         //
         IntOption    verb   ("MAIN", "verb",   "Verbosity level (0=silent, 1=some, 2=more).", 1, IntRange(0, 2));
         IntOption    cpu_lim("MAIN", "cpu-lim","Limit on CPU time allowed in seconds.\n", INT32_MAX, IntRange(0, INT32_MAX));
         IntOption    mem_lim("MAIN", "mem-lim","Limit on memory usage in megabytes.\n", INT32_MAX, IntRange(0, INT32_MAX));
-        StringOption decision_trail("MAIN", "decision-trail", "If given, save trail of decision variables from file.");
+        StringOption decision_trail ("MAIN", "decision-trail", "If given, save trail of decision variables from file.");
         
         parseOptions(argc, argv, true);
 
         Solver S;
-        FILE * f = fopen((const char*)decision_trail, "wt");
-		if (f != NULL) {
-
-			S.decision_trail_file = f;
-			//fclose(f);
-		}
-		else {
-			printf("ERROR! Could not open file: %s\n", (const char*)decision_trail);
-			exit(1);
-		}
-        S.decision_trail_file = f;
         double initial_time = cpuTime();
 
         S.verbosity = verb;
@@ -174,19 +149,34 @@ int main(int argc, char** argv)
         signal(SIGINT, SIGINT_interrupt);
         signal(SIGXCPU,SIGINT_interrupt);
        
+
+        if (decision_trail) {
+			FILE * f = fopen((const char*)decision_trail, "wt");
+			if (f != NULL) {
+				S.save_decision_trail = true;
+				S.decision_trail_file = f;
+				//fclose(f);
+			}
+			else {
+				printf("ERROR! Could not open file: %s\n", (const char*)decision_trail);
+				exit(1);
+			}
+		}
+
         if (!S.simplify()){
             if (res != NULL) fprintf(res, "UNSAT\n"), fclose(res);
-			printf("===============================================================================\n");
-			printf("Solved by unit propagation\n");
-			printStats(S);
-			printf("\n");
+            if (S.verbosity > 0){
+                printf("===============================================================================\n");
+                printf("Solved by unit propagation\n");
+                printStats(S);
+                printf("\n"); }
             printf("UNSATISFIABLE\n");
             exit(20);
         }
         
         vec<Lit> dummy;
         lbool ret = S.solveLimited(dummy);
-        if (S.verbosity > -1){
+        if (S.verbosity > 0){
             printStats(S);
             printf("\n"); }
         printf(ret == l_True ? "SATISFIABLE\n" : ret == l_False ? "UNSATISFIABLE\n" : "INDETERMINATE\n");

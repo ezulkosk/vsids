@@ -51,7 +51,9 @@ public:
     bool    addClause (Lit p, Lit q);                           // Add a binary clause to the solver. 
     bool    addClause (Lit p, Lit q, Lit r);                    // Add a ternary clause to the solver. 
     bool    addClause_(      vec<Lit>& ps);                     // Add a clause to the solver without making superflous internal copy. Will
-                                                                // change the passed vector 'ps'.
+    // change the passed vector 'ps'.
+
+    bool      save_decision_trail;   // Whether to save decision trail
 
     // Solving:
     //
@@ -78,6 +80,9 @@ public:
     // 
     void    setPolarity    (Var v, bool b); // Declare which polarity the decision heuristic should use for a variable. Requires mode 'polarity_user'.
     void    setDecisionVar (Var v, bool b); // Declare if a variable should be eligible for selection in the decision heuristic.
+    void    writeDecisionVar(Var next);
+    // Track solver behavior
+	FILE* decision_trail_file;
 
     // Read state:
     //
@@ -113,18 +118,6 @@ public:
 
     // Mode of operation:
     //
-
-    //XXX EXPERIMENT
-    FILE* decision_trail_file;
-	int		            prev_cmty; // -1 init
-	vec<int>			cmtys;
-	FMap<int>			frequencies_map;
-	int		 			cmty_switches;
-	int					iters_in_cmty;
-	int					max_iters_in_cmty;
-	void    writeDecisionVar(Var next);     // Write decision variable to file
-
-
     int       verbosity;
     double    var_decay;
     double    clause_decay;
@@ -147,11 +140,8 @@ public:
 
     // Statistics: (read-only member variable)
     //
-    uint64_t solves, starts, decisions, rnd_decisions, propagations, conflicts, backjumps;
+    uint64_t solves, starts, decisions, rnd_decisions, propagations, conflicts;
     uint64_t dec_vars, clauses_literals, learnts_literals, max_literals, tot_literals;
-    uint64_t learnt_clause_vars, bridge_learnt_clause_vars;
-
-
 
 protected:
 
@@ -225,9 +215,6 @@ protected:
     int64_t             propagation_budget; // -1 means no budget.
     bool                asynch_interrupt;
 
-
-
-
     // Main internal methods:
     //
     void     insertVarOrder   (Var x);                                                 // Insert a variable in the decision order priority queue.
@@ -292,6 +279,17 @@ protected:
 //=================================================================================================
 // Implementation of inline methods:
 
+
+inline void Solver::writeDecisionVar(Var next) {
+    assert((next != var_Undef) && (next>=0) && (next<=nVars()));
+    if (save_decision_trail) {
+        // +1 is necessary because MiniSAT stores variables naming from 0 not 1
+        //fprintf(decision_trail_file, "%d ", next+1);
+        fprintf(decision_trail_file, "%d ", next);
+    }
+}
+
+
 inline CRef Solver::reason(Var x) const { return vardata[x].reason; }
 inline int  Solver::level (Var x) const { return vardata[x].level; }
 
@@ -318,14 +316,6 @@ inline void Solver::claBumpActivity (Clause& c) {
             for (int i = 0; i < learnts.size(); i++)
                 ca[learnts[i]].activity() *= 1e-20;
             cla_inc *= 1e-20; } }
-
-
-inline void     Solver::writeDecisionVar(Var next) {
-    assert((next != var_Undef) && (next>=0) && (next<=nVars()));
-	// +1 is necessary because MiniSAT stores variables naming from 0 not 1
-	//fprintf(decision_trail_file, "%d ", next+1);
-	fprintf(decision_trail_file, "%d ", next);
-}
 
 inline void Solver::checkGarbage(void){ return checkGarbage(garbage_frac); }
 inline void Solver::checkGarbage(double gf){

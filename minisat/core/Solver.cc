@@ -42,7 +42,7 @@ static BoolOption    opt_luby_restart      (_cat, "luby",        "Use the Luby r
 static IntOption     opt_restart_first     (_cat, "rfirst",      "The base restart interval", 100, IntRange(1, INT32_MAX));
 static DoubleOption  opt_restart_inc       (_cat, "rinc",        "Restart interval increase factor", 2, DoubleRange(1, false, HUGE_VAL, false));
 static DoubleOption  opt_garbage_frac      (_cat, "gc-frac",     "The fraction of wasted memory allowed before a garbage collection is triggered",  0.20, DoubleRange(0, false, HUGE_VAL, false));
-static StringOption  opt_cmty_file         (_cat, "cmty-file",   "The community file.");
+
 
 //=================================================================================================
 // Constructor/Destructor:
@@ -77,19 +77,8 @@ Solver::Solver() :
 
     // Statistics: (formerly in 'SolverStats')
     //
-  , solves(0), starts(0)
-
-	//EXPERIMENT
-	, cmty_switches(0), prev_cmty(-1), iters_in_cmty(0), max_iters_in_cmty(0)
-
-
-	, decisions(0)
-
-  , rnd_decisions(0), propagations(0), conflicts(0), backjumps(0)
+  , solves(0), starts(0), decisions(0), rnd_decisions(0), propagations(0), conflicts(0)
   , dec_vars(0), clauses_literals(0), learnts_literals(0), max_literals(0), tot_literals(0)
-
-  , learnt_clause_vars (0)
-  , bridge_learnt_clause_vars(0)
 
   , ok                 (true)
   , cla_inc            (1)
@@ -101,8 +90,6 @@ Solver::Solver() :
   , order_heap         (VarOrderLt(activity))
   , progress_estimate  (0)
   , remove_satisfied   (true)
-
-
 
     // Resource constraints:
     //
@@ -364,11 +351,6 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
         out_learnt[max_i] = out_learnt[1];
         out_learnt[1]     = p;
         out_btlevel       = level(var(p));
-    }
-
-    for (int i = 0; i < out_learnt.size(); i++) {
-        Var v = var(out_learnt[i]);
-        learnt_clause_vars++;
     }
 
     for (int j = 0; j < analyze_toclear.size(); j++) seen[var(analyze_toclear[j])] = 0;    // ('seen[]' is now cleared)
@@ -647,7 +629,6 @@ lbool Solver::search(int nof_conflicts)
 
             learnt_clause.clear();
             analyze(confl, learnt_clause, backtrack_level);
-            backjumps += decisionLevel() - backtrack_level;
             cancelUntil(backtrack_level);
 
             if (learnt_clause.size() == 1){
@@ -712,56 +693,12 @@ lbool Solver::search(int nof_conflicts)
                 decisions++;
                 next = pickBranchLit();
 
+
                 if (next == lit_Undef)
                     // Model found:
                     return l_True;
-
-
-                //XXX Experiment
-
-                //spatial locality - count + iters_in_cmty
-                iters_in_cmty++;
-                int temp;
-
-                writeDecisionVar(var(next));
-                /*
-                if (cmtys[var(next)] != prev_cmty){
-	       
-                	if(frequencies_map.has(iters_in_cmty, temp) == 0)
-                		frequencies_map.insert(iters_in_cmty,1);
-                	else
-                		frequencies_map[iters_in_cmty] = frequencies_map[iters_in_cmty]+1;
-                	//printf("%d\n", frequencies_map.has(iters_in_cmty, temp));
-                	if(iters_in_cmty > max_iters_in_cmty)
-                		max_iters_in_cmty = iters_in_cmty;
-
-                	printf("%d %d\n", prev_cmty, cmtys[var(next)]);
-					prev_cmty = cmtys[var(next)];
-					cmty_switches++;
-					iters_in_cmty=0;
-				}
-				*/
-                /* vec
-                if (cmtys[var(next)] != prev_cmty){
-                	if(spatial_frequencies.size() <= iters_in_cmty){
-                		spatial_frequencies.growTo(iters_in_cmty+1, 0);
-                		max_iters_in_cmty = iters_in_cmty;
-                	}
-                	spatial_frequencies[iters_in_cmty] = spatial_frequencies[iters_in_cmty]+1;
-                	prev_cmty = cmtys[var(next)];
-                	cmty_switches++;
-                	iters_in_cmty=0;
-                }
-                */
-
-                //TODO temporal locality
-
-                //TODO Exploit Backdoors - Count + Integral + Integral over time
-
-                //TODO Exploit Critical Variables - Count + Integral + Integral over time
-
-                //TODO outside SAT, Backdoors vs Critical Variables
-
+                else
+                	writeDecisionVar(var(next));
             }
 
             // Increase decision level and enqueue 'next'
@@ -817,32 +754,6 @@ static double luby(double y, int x){
 // NOTE: assumptions passed in member-variable 'assumptions'.
 lbool Solver::solve_()
 {
-	/*
-	if (!opt_cmty_file)
-        fprintf(stderr, "missing community file\n"), exit(1);
-    FILE* cmty_file = fopen(opt_cmty_file, "r");
-    if (cmty_file == NULL)
-        fprintf(stderr, "could not open file %s\n", (const char*) opt_cmty_file), exit(1);
-
-    int v;
-    int cmty;
-    cmtys.growTo(nVars());
-
-    while (fscanf(cmty_file, "%d %d\n", &v, &cmty) == 2) {
-        cmtys[v] = cmty;
-    }
-
-    int nCmtys = 0;
-    for (int i = 0; i < cmtys.size(); i++) {
-        if (nCmtys < cmtys[i]) nCmtys = cmtys[i];
-    }
-
-    printf("Cmtys   : %d\n", nCmtys);
-    printf("Variables : %d\n", nVars());
-
-    fclose(cmty_file);
-	*/
-
     model.clear();
     conflict.clear();
     if (!ok) return l_False;
@@ -888,7 +799,7 @@ lbool Solver::solve_()
 //=================================================================================================
 // Writing CNF to DIMACS:
 // 
-
+// FIXME: this needs to be rewritten completely.
 
 static Var mapVar(Var x, vec<Var>& map, Var& max)
 {
