@@ -285,7 +285,7 @@ inline void Solver::writeDecisionVar(Var next) {
     if (save_decision_trail) {
         // +1 is necessary because MiniSAT stores variables naming from 0 not 1
         //fprintf(decision_trail_file, "%d ", next+1);
-        fprintf(decision_trail_file, "%d ", next);
+        fprintf(decision_trail_file, "%d\n", next);
     }
 }
 

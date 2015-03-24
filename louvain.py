@@ -1,7 +1,10 @@
-import sys
-import community
-import networkx as nx
 import itertools
+import sys
+
+import community
+
+import networkx as nx
+
 
 def read_dimacs_format(lines):
     number_of_variables = None
@@ -49,6 +52,7 @@ if __name__ == '__main__':
     build_graph(G, sat_instance)
     
     partition = community.best_partition(G)
+    
     
     for k in partition.keys():
         outfile.write("{0} {1}\n".format(k - 1, partition[k]))
