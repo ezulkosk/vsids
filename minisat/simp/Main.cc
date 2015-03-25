@@ -86,6 +86,7 @@ int main(int argc, char** argv)
         StringOption dimacs ("MAIN", "dimacs", "If given, stop after preprocessing and write the result to this file.");
         IntOption    cpu_lim("MAIN", "cpu-lim","Limit on CPU time allowed in seconds.\n", INT32_MAX, IntRange(0, INT32_MAX));
         IntOption    mem_lim("MAIN", "mem-lim","Limit on memory usage in megabytes.\n", INT32_MAX, IntRange(0, INT32_MAX));
+        StringOption decision_trail ("MAIN", "decision-trail", "If given, save trail of decision variables from file.");
 
         parseOptions(argc, argv, true);
         
@@ -111,6 +112,19 @@ int main(int argc, char** argv)
                 if (setrlimit(RLIMIT_CPU, &rl) == -1)
                     printf("WARNING! Could not set resource limit: CPU-time.\n");
             } }
+
+        if (decision_trail) {
+			FILE * f = fopen((const char*)decision_trail, "wt");
+			if (f != NULL) {
+				S.save_decision_trail = true;
+				S.decision_trail_file = f;
+				//fclose(f);
+			}
+			else {
+				printf("ERROR! Could not open file: %s\n", (const char*)decision_trail);
+				exit(1);
+			}
+		}
 
         // Set limit on virtual memory:
         if (mem_lim != INT32_MAX){
