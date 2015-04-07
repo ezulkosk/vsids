@@ -85,6 +85,7 @@ int main(int argc, char** argv)
         IntOption    cpu_lim("MAIN", "cpu-lim","Limit on CPU time allowed in seconds.\n", INT32_MAX, IntRange(0, INT32_MAX));
         IntOption    mem_lim("MAIN", "mem-lim","Limit on memory usage in megabytes.\n", INT32_MAX, IntRange(0, INT32_MAX));
         StringOption decision_trail ("MAIN", "decision-trail", "If given, save trail of decision variables from file.");
+        StringOption learned_clauses ("MAIN", "learned-clauses", "If given, save learned clauses to file.");
         
         parseOptions(argc, argv, true);
 
@@ -159,6 +160,19 @@ int main(int argc, char** argv)
 			}
 			else {
 				printf("ERROR! Could not open file: %s\n", (const char*)decision_trail);
+				exit(1);
+			}
+		}
+
+        if (learned_clauses) {
+			FILE * f = fopen((const char*)learned_clauses, "wt");
+			if (f != NULL) {
+				S.save_learned_clauses = true;
+				S.learned_clauses_file = f;
+				//fclose(f);
+			}
+			else {
+				printf("ERROR! Could not open file: %s\n", (const char*)learned_clauses);
 				exit(1);
 			}
 		}
