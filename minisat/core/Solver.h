@@ -54,7 +54,6 @@ public:
     // change the passed vector 'ps'.
 
     bool      save_decision_trail;   // Whether to save decision trail
-    bool      save_learned_clauses;   // Whether to save learned clauses
 
     // Solving:
     //
@@ -86,7 +85,6 @@ public:
 
     // Track solver behavior
 	FILE* decision_trail_file;
-	FILE* learned_clauses_file;
 
     // Read state:
     //
@@ -146,6 +144,8 @@ public:
     //
     uint64_t solves, starts, decisions, rnd_decisions, propagations, conflicts;
     uint64_t dec_vars, clauses_literals, learnts_literals, max_literals, tot_literals;
+
+    int branching; //EXPERIMENT 1 == mvsids, 2 == cvsids
 
 protected:
 
@@ -290,14 +290,6 @@ inline void Solver::writeDecisionVar(Var next) {
         // +1 is necessary because MiniSAT stores variables naming from 0 not 1
         //fprintf(decision_trail_file, "%d ", next+1);
         fprintf(decision_trail_file, "%d\n", next);
-    }
-}
-
-inline void Solver::writeLearnedClause(vec<Lit>& out_learnt) {
-    if (save_learned_clauses) {
-    	for(int i = 0; i < out_learnt.size(); i++)
-    		fprintf(learned_clauses_file, "%d ", var(out_learnt[i]));
-    	fprintf(learned_clauses_file, "\n");
     }
 }
 

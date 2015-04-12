@@ -283,7 +283,9 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
             Lit q = c[j];
 
             if (!seen[var(q)] && level(var(q)) > 0){
-                varBumpActivity(var(q));
+                if(branching == 1) {
+                    varBumpActivity(var(q));
+                }
                 seen[var(q)] = 1;
                 if (level(var(q)) >= decisionLevel())
                     pathC++;
@@ -353,8 +355,13 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
         out_btlevel       = level(var(p));
     }
 
-    //XXX EXPERIMENT
-    writeLearnedClause(out_learnt);
+    //cvsids
+    if(branching == 2) {
+        for (int i = 0; i < out_learnt.size(); i++) {
+            varBumpActivity(var(out_learnt[i]));
+        }
+    }
+
 
     for (int j = 0; j < analyze_toclear.size(); j++) seen[var(analyze_toclear[j])] = 0;    // ('seen[]' is now cleared)
 }
