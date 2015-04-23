@@ -271,20 +271,29 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
     //
     out_learnt.push();      // (leave room for the asserting literal)
     int index   = trail.size() - 1;
-
+    int lbd_val = 0;
+    conflict_analysis_vars.clear();
     do{
         assert(confl != CRef_Undef); // (otherwise should be UIP)
         Clause& c = ca[confl];
-
+        //XXX EXPERIMENT
         if (c.learnt())
             claBumpActivity(c);
 
         for (int j = (p == lit_Undef) ? 0 : 1; j < c.size(); j++){
             Lit q = c[j];
-
             if (!seen[var(q)] && level(var(q)) > 0){
                 if(branching == 1) {
+                	//printf("IN\n");
+
                     varBumpActivity(var(q));
+                }
+                else if(branching == 3) {
+                	//printf("IN\n");
+                	//printf("%d %d\n", var(q), vardata[var(q)].level);
+                	conflict_analysis_vars.push(var(q));
+                	//printf("%d %f\n", level(var(q)), lbd_final_val);
+                    //varBumpActivity(var(q), lbd_final_val * var_inc);
                 }
                 seen[var(q)] = 1;
                 if (level(var(q)) >= decisionLevel())
@@ -360,6 +369,12 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
         for (int i = 0; i < out_learnt.size(); i++) {
             varBumpActivity(var(out_learnt[i]));
         }
+    }
+    if(branching == 3){
+		lbd_val = lbd(out_learnt);
+		for (int i = 0; i < conflict_analysis_vars.size(); i++) {
+		  varBumpActivity(conflict_analysis_vars[i], var_inc / lbd_val);
+		}
     }
 
 

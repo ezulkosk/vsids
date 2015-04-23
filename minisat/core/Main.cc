@@ -164,11 +164,11 @@ int main(int argc, char** argv)
 				exit(1);
 			}
 		}
-        if (branching == 1 || branching == 2) {
+        if (branching == 1 || branching == 2 || branching == 3) {
             S.branching = branching;
             }
         else {
-            printf("Error branching pick 1 or 2");
+            printf("Error branching pick 1 or 2 or 3");
             exit(1);
         }
 
