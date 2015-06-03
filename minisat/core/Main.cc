@@ -163,6 +163,8 @@ int main(int argc, char** argv)
 				exit(1);
 			}
 		}
+        else
+        	S.save_decision_trail = false;
 
         if (learned_clauses) {
 			FILE * f = fopen((const char*)learned_clauses, "wt");
@@ -176,6 +178,8 @@ int main(int argc, char** argv)
 				exit(1);
 			}
 		}
+        else
+        	S.save_learned_clauses = false;
 
         if (!S.simplify()){
             if (res != NULL) fprintf(res, "UNSAT\n"), fclose(res);

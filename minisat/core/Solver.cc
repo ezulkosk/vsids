@@ -101,7 +101,8 @@ Solver::Solver() :
 
 Solver::~Solver()
 {
-	fclose(decision_trail_file);
+	if(save_decision_trail)
+		fclose(decision_trail_file);
 }
 
 
@@ -354,6 +355,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
     }
 
     //XXX EXPERIMENT
+
     writeLearnedClause(out_learnt);
 
     for (int j = 0; j < analyze_toclear.size(); j++) seen[var(analyze_toclear[j])] = 0;    // ('seen[]' is now cleared)
