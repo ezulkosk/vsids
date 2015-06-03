@@ -1,27 +1,27 @@
-/home/ezulkosk/git/vsids/minisat/core/Main.o /home/ezulkosk/git/vsids/minisat/core/Main.or /home/ezulkosk/git/vsids/minisat/core/Main.od /home/ezulkosk/git/vsids/minisat/core/Main.op: /home/ezulkosk/git/vsids/minisat/core/Main.cc \
- /home/ezulkosk/git/vsids/minisat/utils/System.h \
- /home/ezulkosk/git/vsids/minisat/mtl/IntTypes.h \
- /home/ezulkosk/git/vsids/minisat/utils/ParseUtils.h \
- /home/ezulkosk/git/vsids/minisat/utils/Options.h \
- /home/ezulkosk/git/vsids/minisat/mtl/Vec.h \
- /home/ezulkosk/git/vsids/minisat/mtl/XAlloc.h \
- /home/ezulkosk/git/vsids/minisat/core/Dimacs.h \
- /home/ezulkosk/git/vsids/minisat/core/SolverTypes.h \
- /home/ezulkosk/git/vsids/minisat/mtl/Alg.h \
- /home/ezulkosk/git/vsids/minisat/mtl/Map.h \
- /home/ezulkosk/git/vsids/minisat/mtl/Alloc.h \
- /home/ezulkosk/git/vsids/minisat/core/Solver.h \
- /home/ezulkosk/git/vsids/minisat/mtl/Heap.h
-/home/ezulkosk/git/vsids/minisat/core/Solver.o /home/ezulkosk/git/vsids/minisat/core/Solver.or /home/ezulkosk/git/vsids/minisat/core/Solver.od /home/ezulkosk/git/vsids/minisat/core/Solver.op: /home/ezulkosk/git/vsids/minisat/core/Solver.cc \
- /home/ezulkosk/git/vsids/minisat/mtl/Sort.h \
- /home/ezulkosk/git/vsids/minisat/mtl/Vec.h \
- /home/ezulkosk/git/vsids/minisat/mtl/IntTypes.h \
- /home/ezulkosk/git/vsids/minisat/mtl/XAlloc.h \
- /home/ezulkosk/git/vsids/minisat/core/Solver.h \
- /home/ezulkosk/git/vsids/minisat/mtl/Heap.h \
- /home/ezulkosk/git/vsids/minisat/mtl/Alg.h \
- /home/ezulkosk/git/vsids/minisat/utils/Options.h \
- /home/ezulkosk/git/vsids/minisat/utils/ParseUtils.h \
- /home/ezulkosk/git/vsids/minisat/core/SolverTypes.h \
- /home/ezulkosk/git/vsids/minisat/mtl/Map.h \
- /home/ezulkosk/git/vsids/minisat/mtl/Alloc.h
+/Users/ezulkosk/git/vsids/minisat/core/Main.o /Users/ezulkosk/git/vsids/minisat/core/Main.or /Users/ezulkosk/git/vsids/minisat/core/Main.od /Users/ezulkosk/git/vsids/minisat/core/Main.op: /Users/ezulkosk/git/vsids/minisat/core/Main.cc \
+  /Users/ezulkosk/git/vsids/minisat/utils/System.h \
+  /Users/ezulkosk/git/vsids/minisat/mtl/IntTypes.h \
+  /Users/ezulkosk/git/vsids/minisat/utils/ParseUtils.h \
+  /Users/ezulkosk/git/vsids/minisat/utils/Options.h \
+  /Users/ezulkosk/git/vsids/minisat/mtl/Vec.h \
+  /Users/ezulkosk/git/vsids/minisat/mtl/XAlloc.h \
+  /Users/ezulkosk/git/vsids/minisat/core/Dimacs.h \
+  /Users/ezulkosk/git/vsids/minisat/core/SolverTypes.h \
+  /Users/ezulkosk/git/vsids/minisat/mtl/Alg.h \
+  /Users/ezulkosk/git/vsids/minisat/mtl/Map.h \
+  /Users/ezulkosk/git/vsids/minisat/mtl/Alloc.h \
+  /Users/ezulkosk/git/vsids/minisat/core/Solver.h \
+  /Users/ezulkosk/git/vsids/minisat/mtl/Heap.h
+/Users/ezulkosk/git/vsids/minisat/core/Solver.o /Users/ezulkosk/git/vsids/minisat/core/Solver.or /Users/ezulkosk/git/vsids/minisat/core/Solver.od /Users/ezulkosk/git/vsids/minisat/core/Solver.op: /Users/ezulkosk/git/vsids/minisat/core/Solver.cc \
+  /Users/ezulkosk/git/vsids/minisat/mtl/Sort.h \
+  /Users/ezulkosk/git/vsids/minisat/mtl/Vec.h \
+  /Users/ezulkosk/git/vsids/minisat/mtl/IntTypes.h \
+  /Users/ezulkosk/git/vsids/minisat/mtl/XAlloc.h \
+  /Users/ezulkosk/git/vsids/minisat/core/Solver.h \
+  /Users/ezulkosk/git/vsids/minisat/mtl/Heap.h \
+  /Users/ezulkosk/git/vsids/minisat/mtl/Alg.h \
+  /Users/ezulkosk/git/vsids/minisat/utils/Options.h \
+  /Users/ezulkosk/git/vsids/minisat/utils/ParseUtils.h \
+  /Users/ezulkosk/git/vsids/minisat/core/SolverTypes.h \
+  /Users/ezulkosk/git/vsids/minisat/mtl/Map.h \
+  /Users/ezulkosk/git/vsids/minisat/mtl/Alloc.h

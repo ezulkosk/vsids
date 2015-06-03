@@ -37,13 +37,13 @@ using namespace Minisat;
 void printStats(Solver& solver)
 {
     double cpu_time = cpuTime();
-    double mem_used = memUsedPeak();
+    //double mem_used = memUsedPeak();
     printf("restarts              : %"PRIu64"\n", solver.starts);
     printf("conflicts             : %-12"PRIu64"   (%.0f /sec)\n", solver.conflicts   , solver.conflicts   /cpu_time);
     printf("decisions             : %-12"PRIu64"   (%4.2f %% random) (%.0f /sec)\n", solver.decisions, (float)solver.rnd_decisions*100 / (float)solver.decisions, solver.decisions   /cpu_time);
     printf("propagations          : %-12"PRIu64"   (%.0f /sec)\n", solver.propagations, solver.propagations/cpu_time);
     printf("conflict literals     : %-12"PRIu64"   (%4.2f %% deleted)\n", solver.tot_literals, (solver.max_literals - solver.tot_literals)*100 / (double)solver.max_literals);
-    if (mem_used != 0) printf("Memory used           : %.2f MB\n", mem_used);
+    //if (mem_used != 0) printf("Memory used           : %.2f MB\n", mem_used);
     printf("CPU time              : %g s\n", cpu_time);
 }
 
@@ -85,7 +85,8 @@ int main(int argc, char** argv)
         IntOption    cpu_lim("MAIN", "cpu-lim","Limit on CPU time allowed in seconds.\n", INT32_MAX, IntRange(0, INT32_MAX));
         IntOption    mem_lim("MAIN", "mem-lim","Limit on memory usage in megabytes.\n", INT32_MAX, IntRange(0, INT32_MAX));
         StringOption decision_trail ("MAIN", "decision-trail", "If given, save trail of decision variables from file.");
-        StringOption learned_clauses ("MAIN", "learned-clauses", "If given, save learned clauses to file.");
+        IntOption    branching("MAIN", "branching","1 for mvsids; 2 for cvsids.\n", INT32_MAX, IntRange(0, INT32_MAX));
+        //StringOption learned_clauses ("MAIN", "learned-clauses", "If given, save learned clauses to file.");
         
         parseOptions(argc, argv, true);
 
@@ -166,6 +167,16 @@ int main(int argc, char** argv)
         else
         	S.save_decision_trail = false;
 
+        if (branching == 1 || branching == 2 || branching == 3) {
+            S.branching = branching;
+            }
+        else {
+            printf("Error branching pick 1 or 2 or 3");
+            exit(1);
+        }
+
+
+        /*
         if (learned_clauses) {
 			FILE * f = fopen((const char*)learned_clauses, "wt");
 			if (f != NULL) {
@@ -178,8 +189,12 @@ int main(int argc, char** argv)
 				exit(1);
 			}
 		}
+<<<<<<< HEAD
         else
         	S.save_learned_clauses = false;
+=======
+         */
+
 
         if (!S.simplify()){
             if (res != NULL) fprintf(res, "UNSAT\n"), fclose(res);
